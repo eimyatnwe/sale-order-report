@@ -118,6 +118,7 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 				minWidth: '150px',
 				maxWidth: '150px',
 				sortable: true,
+				isActive: true,
 				type: Go5TableStandardColumnType.Text,
 				topic: {
 					fieldName: 'saleOrderNo'
@@ -132,6 +133,7 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 				minWidth: '260px',
 				maxWidth: '260px',
 				sortable: true,
+				isActive: true,
 				type: Go5TableStandardColumnType.Text,
 				topic: {
 					fieldName: 'subject'
@@ -146,6 +148,7 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 				minWidth: '140px',
 				maxWidth: '140px',
 				sortable: true,
+				isActive: true,
 				type: Go5TableStandardColumnType.Text,
 				topic: {
 					fieldName: 'dateCreated',
@@ -161,6 +164,7 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 				minWidth: '160px',
 				maxWidth: '160px',
 				sortable: true,
+				isActive: true,
 				type: Go5TableStandardColumnType.Text,
 				topic: {
 					fieldName: 'dateOrder',
@@ -176,6 +180,7 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 				minWidth: '230px',
 				maxWidth: '230px',
 				sortable: true,
+				isActive: true,
 				type: Go5TableStandardColumnType.Custom,
 				bodyTemplate: this.customBody()
 			},
@@ -185,6 +190,7 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 					text: 'common_contact'
 				},
 				sortable: true,
+				isActive: true,
 				width: '180px',
 				minWidth: '180px',
 				maxWidth: '180px',
@@ -199,6 +205,7 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 					text: 'common_shipping_address'
 				},
 				sortable: true,
+				isActive: true,
 				width: '200px',
 				minWidth: '200px',
 				maxWidth: '200px',
@@ -213,6 +220,7 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 					text: 'common_report_tb_orderdetail'
 				},
 				sortable: true,
+				isActive: true,
 				width: '480px',
 				minWidth: '480px',
 				maxWidth: '480px',
@@ -226,6 +234,7 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 					align: 'start'
 				},
 				sortable: false,
+				isActive: true,
 				width: '160px',
 				minWidth: '160px',
 				maxWidth: '160px',
@@ -242,6 +251,7 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 					align: 'left'
 				},
 				sortable: true,
+				isActive: true,
 				width: '160px',
 				minWidth: '160px',
 				maxWidth: '160px',
@@ -260,6 +270,7 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 					align: 'left'
 				},
 				sortable: true,
+				isActive: true,
 				width: '160px',
 				minWidth: '160px',
 				maxWidth: '160px',
@@ -278,6 +289,7 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 					align: 'left'
 				},
 				sortable: true,
+				isActive: true,
 				width: '160px',
 				minWidth: '160px',
 				maxWidth: '160px',
@@ -296,6 +308,7 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 					align: 'left'
 				},
 				sortable: true,
+				isActive: true,
 				width: '160px',
 				minWidth: '160px',
 				maxWidth: '160px',
@@ -310,6 +323,7 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 					text: 'common_report_completed_by'
 				},
 				sortable: true,
+				isActive: true,
 				width: '160px',
 				minWidth: '160px',
 				maxWidth: '160px',
@@ -327,6 +341,7 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 				minWidth: '170px',
 				maxWidth: '170px',
 				sortable: true,
+				isActive: true,
 				type: Go5TableStandardColumnType.Text,
 				topic: {
 					fieldName: 'dateApproved',
@@ -339,6 +354,7 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 					text: 'common_quotation_payment_term'
 				},
 				sortable: true,
+				isActive: true,
 				width: '170px',
 				minWidth: '170px',
 				maxWidth: '170px',
@@ -353,6 +369,7 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 					text: 'common_remark'
 				},
 				sortable: true,
+				isActive: true,
 				width: '183px',
 				minWidth: '183px',
 				maxWidth: '183px',
@@ -367,6 +384,7 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 					text: 'common_saleorder_ref_no_detail'
 				},
 				sortable: true,
+				isActive: true,
 				width: '160px',
 				minWidth: '160px',
 				maxWidth: '160px',
@@ -381,6 +399,7 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 					text: 'common_deal_no'
 				},
 				sortable: true,
+				isActive: true,
 				width: '160px',
 				minWidth: '160px',
 				maxWidth: '160px',
@@ -395,6 +414,7 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 					text: 'common_quotation_quotation_no'
 				},
 				sortable: true,
+				isActive: true,
 				width: '160px',
 				minWidth: '160px',
 				maxWidth: '160px',
@@ -409,6 +429,7 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 					text: 'common_total_attachment'
 				},
 				sortable: true,
+				isActive: true,
 				width: '180px',
 				minWidth: '180px',
 				maxWidth: '180px',
@@ -423,6 +444,7 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 					text: 'common_activity_private_note'
 				},
 				sortable: true,
+				isActive: true,
 				width: '180px',
 				minWidth: '180px',
 				maxWidth: '180px',
@@ -452,6 +474,7 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
                 width : '202px',
                 minWidth: '202px',
                 sortable: true,
+				isActive: true,
             },
             {
                 id : 'status',
@@ -466,8 +489,14 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
                 },
                 width : '170px',
                 sortable: true,
+				isActive: true,
             }
 		]
+		this.dataSourceFilter[0].dataSource = this.columns.map(col => ({
+			     columnName: col.header.text, 
+			     columnId: col.id,
+			 }));
+		this._cdr.detectChanges();
 	}
 	public summary: Summary_Sales_Order = null
 	public loadingSummary = false
@@ -532,7 +561,7 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 			value: 'column',
 			allowFiltering: false,
 			fields: this.columnsFields,
-			dataSource: this.columns
+			dataSource: []
 		},
 		{
 			text: 'common_status',
@@ -841,9 +870,9 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 		return 1
 	}
 
-	// getActiveColumn(columnId: number) {
-	// 	return this.columns.find((s) => s['columnId'] === columnId).isActive
-	// }
+	getActiveColumn(columnId: number) {
+		return this.columns.find((s) => s['columnId'] === columnId).isActive
+	}
 
 	private getDataSummary() {
 		if (this.loadingSummary || !this.filter.dateFrom || !this.filter.dateTo) return
@@ -968,6 +997,7 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 	public onSelectedFilter(event: DropdownEventArgs) {
 		const type: string = event?.data?.value
 		const columnIds: number[] = event?.value
+
 		let value = [...new Set(columnIds)]
 		this.filter[type] = value
 
@@ -991,28 +1021,29 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 
 	public setDefaultColumn() {
 		if (this.firstSettingColumn) {
-			this.columns = this.columns?.map((col, index) => {
-				// col.columnId = index + 1
-				return col
-			})
-
+			
 			const columnIds = this.columns?.filter((c) => c).map((col) => col?.id)
+			console.log('column ids: ', columnIds)
 			this.defaultColumns = columnIds
-			// this.filter.columns = this.defaultColumns
-
+			this.filter.column = columnIds.map(id => parseInt(id))
+			const columnFilterIndex = this.dataSourceFilter.findIndex(f => f.value === 'column')
+			if (columnFilterIndex !== -1) {
+				this.dataSourceFilter[columnFilterIndex].selectedValues = columnIds
+			}
+	
 			this.setDataSourceFilter('column', this.columns)
 		}
 
+		console.log('filter column: ', this.filter.column)
 		if (this.filter?.column?.length) {
 			this.setActiveColumns(this.filter?.column)
 		}
-
+	
 		this.firstSettingColumn = false
 	}
-
 	setActiveColumns(columnsIds = []) {
 		this.columns = this.columns?.map((col) => {
-			// col.isActive = columnsIds.includes(col.columnId)
+			col.isActive = columnsIds.includes(col.id)
 			return col
 		})
 	}
@@ -1027,7 +1058,7 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 
 	public onClearAll(event) {
 		this.columns = this.columns?.map((col) => {
-			// col.isActive = false
+			col.isActive = false
 			return col
 		})
 		this.setActiveColumns([])
