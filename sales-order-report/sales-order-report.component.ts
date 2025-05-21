@@ -5,16 +5,17 @@ import {
 	OnDestroy,
 	OnInit,
 	ViewChild,
+	viewChild,
+	TemplateRef,
 	ViewEncapsulation,
 	signal,
-	ChangeDetectorRef,
-	computed
+	ChangeDetectorRef
 } from '@angular/core'
 import { Customer, vwUserInfo } from '@venio/shared/models/venio.model'
 import { ReportFilter, Summary_Column, Summary_Sales_Order } from '@venio/modules/dashboard/shared/report.model'
 import { DatePipe } from '@angular/common'
 import { Router } from '@angular/router'
-import { DateFormat, LANGUAGE_KEY, PhrasePipe, PhraseService } from '@gofive/angular-common'
+import { DateFormat, PhrasePipe, PhraseService } from '@gofive/angular-common'
 import { FieldSettingsModel, FilteringEventArgs } from '@syncfusion/ej2-angular-dropdowns'
 import { FreezeService } from '@syncfusion/ej2-angular-grids'
 import { DataSharingService } from '@venio/core/data-sharing.service'
@@ -23,20 +24,11 @@ import { FilterSharingService } from '@venio/core/filter-sharing.service'
 import { CustomerService } from '@venio/modules/customer/shared/customer.service'
 import { AppConfig } from '@venio/shared/classes/config'
 import { getDate } from '@venio/shared/helper/dateTime'
-import {
-	debounceTime,
-	distinctUntilChanged,
-	Subject,
-	Subscription,
-	switchMap,
-	takeUntil,
-	filter,
-	firstValueFrom
-} from 'rxjs'
+import { debounceTime, distinctUntilChanged, Subject, Subscription, switchMap, takeUntil, filter, firstValueFrom } from 'rxjs'
 import { Permissions } from '@venio/shared/enum/permissions.enum'
 import { Statuses } from '@venio/shared/enum/statuses.enum'
 import { ColumnModel } from '@venio/shared/models/datatable.model'
-import { StaffFilter } from '../../../admin/shared/team.model'
+import { SearchFilter, StaffFilter } from '../../../admin/shared/team.model'
 import { TeamService } from '../../../admin/shared/team.service'
 import { OpportunityManagementService } from '../../../opportunitymanagement/shared/opportunitymanagement.service'
 import { MyDropdownComponent } from '../../../shared/my-dropdown/my-dropdown.component'
@@ -49,7 +41,8 @@ import { ExportFileType } from '@venio/shared/enum/export-file-type.enum'
 import { DateRangeComponent } from './../../../shared/filter/date-range/date-range.component'
 import { HistoryLogComponent } from '../../shared/history-log/history-log.component'
 import { Go5DropdownFilterEventArgs } from '@venio/shared/interfaces/dropdown.interface'
-import { AppConfigService } from '@venio/shared/services/app-config.service'
+import {Go5FieldType, Go5TableStandardColumn, Go5TableStandardColumnType, IGo5TableStandardSortEvent, OptionColumnModel} from '@gofive/design-system-table'
+import { STATUS_NAME } from '@gofive/design-system-badge'
 
 @Component({
 	selector: 'app-sales-order-report',
@@ -66,7 +59,6 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 	public staffDdl: MyDropdownComponent
 	public loading = false
 	public counter = Array
-	private readonly appConfigService = inject(AppConfigService)
 	public filter: ReportFilter = new ReportFilter()
 	public data: Object[] = []
 	public staffs: Object[] = []
@@ -110,269 +102,412 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 	]
 	public columnsFields: FieldSettingsModel = { text: 'columnName', value: 'columnId' }
 	public columnsDdlValue: number[] = []
-	public columns: ColumnModel[] = [
-		{
-			columnId: 1,
-			column: 'saleOrderNo',
-			orderKey: ['saleOrderNo'],
-			columnName: 'common_docs_no',
-			orderable: true,
-			type: 'string',
-			isActive: true,
-			width: '150px'
-		},
-		{
-			columnId: 2,
-			column: 'subject',
-			orderKey: ['subject'],
-			columnName: 'common_case_subject',
-			orderable: true,
-			type: 'string',
-			isActive: true,
-			width: '260px'
-		},
-		{
-			columnId: 3,
-			column: 'dateCreated',
-			orderKey: ['dateCreated'],
-			columnName: 'common_report_created_date',
-			orderable: true,
-			type: 'date',
-			isActive: true,
-			width: '140px'
-		},
-		{
-			columnId: 4,
-			column: 'dateOrder',
-			orderKey: ['dateOrder'],
-			columnName: 'common_report_order_date',
-			orderable: true,
-			type: 'date',
-			isActive: true,
-			width: '160px'
-		},
+	public columns: Go5TableStandardColumn[] = []
+	private readonly customBody = viewChild<TemplateRef<HTMLTableCellElement>>('customerName')
+	private readonly orderDetails = viewChild<TemplateRef<HTMLTableCellElement>>('orderDetails')
+	private readonly price = viewChild<TemplateRef<HTMLTableCellElement>>('totalPrice')
 
-		{
-			columnId: 5,
-			column: 'customerName',
-			orderKey: ['customerName'],
-			columnName: 'common_report_customer_name',
-			orderable: true,
-			type: 'customer',
-			isActive: true,
-			width: '230px'
-		},
-		{
-			columnId: 6,
-			column: 'contactName',
-			orderKey: ['contactName'],
-			columnName: 'common_contact',
-			orderable: true,
-			type: 'string',
-			isActive: true,
-			width: '180px'
-		},
-		{
-			columnId: 7,
-			column: 'shipToAddress',
-			orderKey: ['shipToAddress'],
-			columnName: 'common_shipping_address',
-			orderable: true,
-			type: 'string',
-			isActive: true,
-			width: '200px'
-		},
-		{
-			columnId: 8,
-			column: 'saleOrderDetails',
-			orderKey: ['saleOrderDetails'],
-			columnName: 'common_report_tb_orderdetail',
-			orderable: false,
-			type: 'orderDetail',
-			isActive: true,
-			width: '480px'
-		},
-		{
-			columnId: 9,
-			column: 'totalPrice',
-			orderKey: ['totalPrice'],
-			columnName: 'common_item_price',
-			orderable: false,
-			type: 'orderDetailPrice',
-			isActive: true,
-			width: '160px',
-			cssClass: 'talign-right'
-		},
-		{
-			columnId: 10,
-			column: 'subTotal',
-			orderKey: ['subTotal'],
-			columnName: 'common_report_tb_subtotal',
-			orderable: true,
-			type: 'baht',
-			isActive: true,
-			width: '160px',
-			cssClass: 'talign-right'
-		},
-		{
-			columnId: 11,
-			column: 'discount',
-			orderKey: ['discount'],
-			columnName: 'common_report_tb_discount',
-			orderable: true,
-			type: 'baht',
-			isActive: true,
-			width: '160px',
-			cssClass: 'talign-right'
-		},
-
-		{
-			columnId: 12,
-			column: 'totalVat',
-			orderKey: ['vat'],
-			columnName: 'common_quotation_vat',
-			orderable: true,
-			type: 'baht',
-			isActive: true,
-			width: '160px',
-			cssClass: 'talign-right'
-		},
-		{
-			columnId: 13,
-			column: 'grandTotal',
-			orderKey: ['grandTotal'],
-			columnName: 'common_report_tb_grandtotal',
-			orderable: true,
-			type: 'baht',
-			isActive: true,
-			width: '160px',
-			cssClass: 'talign-right'
-		},
-		{
-			columnId: 14,
-			column: 'approveFullName',
-			orderKey: ['approveFullName'],
-			columnName: 'common_report_completed_by',
-			orderable: true,
-			type: 'string',
-			isActive: true,
-			width: '160px'
-		},
-		{
-			columnId: 15,
-			column: 'dateApproved',
-			orderKey: ['dateApproved'],
-			columnName: 'expense_approved_date',
-			orderable: true,
-			type: 'date',
-			isActive: true,
-			width: '170px'
-		},
-		{
-			columnId: 16,
-			column: 'paymentTermDescription',
-			orderKey: ['paymentTermDescription'],
-			columnName: 'common_quotation_payment_term',
-			orderable: true,
-			type: 'payment',
-			isActive: true,
-			width: '170px'
-		},
-		{
-			columnId: 17,
-			column: 'remark',
-			orderKey: ['remark'],
-			columnName: 'common_remark',
-			orderable: true,
-			type: 'remark',
-			isActive: true,
-			width: '183px'
-		},
-		{
-			columnId: 18,
-			column: 'refNo',
-			orderKey: ['referenceno'],
-			columnName: 'common_saleorder_ref_no_detail',
-			orderable: true,
-			type: 'string',
-			isActive: true,
-			width: '160px'
-		},
-
-		{
-			columnId: 19,
-			column: 'dealNo',
-			orderKey: ['dealNo'],
-			columnName: 'common_deal_no',
-			orderable: true,
-			type: 'string',
-			isActive: true,
-			width: '160px'
-		},
-		{
-			columnId: 20,
-			column: 'orderNo',
-			orderKey: ['orderNo'],
-			columnName: 'common_quotation_quotation_no',
-			orderable: false,
-			type: 'string',
-			isActive: true,
-			width: '160px'
-		},
-		{
-			columnId: 21,
-			column: 'attachmentCount',
-			orderKey: ['attachmentcount'],
-			columnName: 'common_total_attachment',
-			orderable: true,
-			type: 'string',
-			isActive: true,
-			width: '180px'
-		},
-
-		{
-			columnId: 22,
-			column: 'privateNote',
-			orderKey: ['privateNote'],
-			columnName: 'common_activity_private_note',
-			orderable: true,
-			type: 'string',
-			isActive: true,
-			width: '180px'
-		},
-		{
-			columnId: 23,
-			column: 'fullName',
-			orderKey: ['fullName'],
-			columnName: 'common_report_staff',
-			orderable: true,
-			type: 'employee',
-			isActive: true,
-			width: '202px'
-		},
-		{
-			columnId: 24,
-			column: 'status',
-			orderKey: ['status'],
-			columnName: 'common_report_tb_statusname',
-			orderable: true,
-			type: 'status',
-			isActive: true,
-			width: '170px',
-			cssClass: 'talign-center'
-		}
-
-		// {
-		// 	columnId: 24,
-		// 	column: 'attachments',
-		// 	orderKey: ['attachments'],
-		// 	columnName: 'common_report_tb_attachment',
-		// 	orderable: false,
-		// 	type: 'attachment',
-		// 	isActive: true,
-		// 	width: '380px'
-		// }
-	]
+	ngAfterViewInit(): void{
+		this.columns = [
+			{
+				id: 'saleOrderNo',
+				header: {
+					text: 'common_docs_no',
+				},
+				width: '150px',
+				minWidth: '150px',
+				maxWidth: '150px',
+				sortable: true,
+				isActive: true,
+				type: Go5TableStandardColumnType.Text,
+				topic: {
+					fieldName: 'saleOrderNo'
+				}
+			},
+			{
+				id: 'subject',
+				header: {
+					text: 'common_case_subject',
+				},
+				width: '260px',
+				minWidth: '260px',
+				maxWidth: '260px',
+				sortable: true,
+				isActive: true,
+				type: Go5TableStandardColumnType.Text,
+				topic: {
+					fieldName: 'subject'
+				}
+			},
+			{
+				id: 'dateCreated',
+				header: {
+					text: 'common_report_created_date',
+				},
+				width: '140px',
+				minWidth: '140px',
+				maxWidth: '140px',
+				sortable: true,
+				isActive: true,
+				type: Go5TableStandardColumnType.Text,
+				topic: {
+					fieldName: 'dateCreated',
+					fieldType: Go5FieldType.Date
+				}
+			},
+			{
+				id: 'dateOrder',
+				header: {
+					text: 'common_report_order_date',
+				},
+				width: '160px',
+				minWidth: '160px',
+				maxWidth: '160px',
+				sortable: true,
+				isActive: true,
+				type: Go5TableStandardColumnType.Text,
+				topic: {
+					fieldName: 'dateOrder',
+					fieldType: Go5FieldType.Date
+				}
+			},
+			{
+				id: 'customerName',
+				header: {
+					text: 'common_report_customer_name',
+				},
+				width: '230px',
+				minWidth: '230px',
+				maxWidth: '230px',
+				sortable: true,
+				isActive: true,
+				type: Go5TableStandardColumnType.Custom,
+				bodyTemplate: this.customBody()
+			},
+			{
+				id: 'contactName',
+				header: {
+					text: 'common_contact'
+				},
+				sortable: true,
+				isActive: true,
+				width: '180px',
+				minWidth: '180px',
+				maxWidth: '180px',
+				type: Go5TableStandardColumnType.Text,
+				topic: {
+					fieldName: 'contactName'
+				}
+			},
+			{
+				id: 'shipToAddress',
+				header: {
+					text: 'common_shipping_address'
+				},
+				sortable: true,
+				isActive: true,
+				width: '200px',
+				minWidth: '200px',
+				maxWidth: '200px',
+				type: Go5TableStandardColumnType.Text,
+				topic: {
+					fieldName: 'shipToAddress'
+				}
+			},
+			{
+				id: 'saleOrderDetails',
+				header: {
+					text: 'common_report_tb_orderdetail'
+				},
+				sortable: true,
+				isActive: true,
+				width: '480px',
+				minWidth: '480px',
+				maxWidth: '480px',
+				type: Go5TableStandardColumnType.Custom,
+				bodyTemplate: this.orderDetails()
+			},
+			{
+				id: 'totalPrice',
+				header: {
+					text: 'common_item_price',
+					align: 'start'
+				},
+				sortable: false,
+				isActive: true,
+				width: '160px',
+				minWidth: '160px',
+				maxWidth: '160px',
+				type: Go5TableStandardColumnType.Custom,
+				bodyTemplate: this.price()
+			},
+			{
+				id: 'subTotal',
+				header: {
+					text: 'common_report_tb_subtotal',
+					align: 'start'
+				},
+				body: {
+					align: 'left'
+				},
+				sortable: true,
+				isActive: true,
+				width: '160px',
+				minWidth: '160px',
+				maxWidth: '160px',
+				type: Go5TableStandardColumnType.Money,
+				money: {
+					fieldName: 'subTotal'
+				}
+			},
+			{
+				id: 'discount',
+				header: {
+					text: 'common_report_tb_discount',
+					align: 'start'
+				},
+				body: {
+					align: 'left'
+				},
+				sortable: true,
+				isActive: true,
+				width: '160px',
+				minWidth: '160px',
+				maxWidth: '160px',
+				type: Go5TableStandardColumnType.Money,
+				money: {
+					fieldName: 'discount'
+				}
+			},
+			{
+				id: 'totalVat',
+				header: {
+					text: 'common_quotation_vat',
+					align: 'start'
+				},
+				body: {
+					align: 'left'
+				},
+				sortable: true,
+				isActive: true,
+				width: '160px',
+				minWidth: '160px',
+				maxWidth: '160px',
+				type: Go5TableStandardColumnType.Money,
+				money: {
+					fieldName: 'totalVat'
+				}
+			},
+			{
+				id: 'grandTotal',
+				header: {
+					text: 'common_report_tb_grandtotal',
+					align: 'start'
+				},
+				body: {
+					align: 'left'
+				},
+				sortable: true,
+				isActive: true,
+				width: '160px',
+				minWidth: '160px',
+				maxWidth: '160px',
+				type: Go5TableStandardColumnType.Money,
+				money: {
+					fieldName: 'grandTotal'
+				}
+			},
+			{
+				id: 'approveFullName',
+				header: {
+					text: 'common_report_completed_by'
+				},
+				sortable: true,
+				isActive: true,
+				width: '160px',
+				minWidth: '160px',
+				maxWidth: '160px',
+				type: Go5TableStandardColumnType.Text,
+				topic: {
+					fieldName: 'approveFullName'
+				}
+			},
+			{
+				id: 'dateApproved',
+				header: {
+					text: 'expense_approved_date',
+				},
+				width: '170px',
+				minWidth: '170px',
+				maxWidth: '170px',
+				sortable: true,
+				isActive: true,
+				type: Go5TableStandardColumnType.Text,
+				topic: {
+					fieldName: 'dateApproved',
+					fieldType: Go5FieldType.Date
+				}
+			},
+			{
+				id: 'paymentTermDescription',
+				header: {
+					text: 'common_quotation_payment_term'
+				},
+				sortable: true,
+				isActive: true,
+				width: '170px',
+				minWidth: '170px',
+				maxWidth: '170px',
+				type: Go5TableStandardColumnType.Text,
+				topic: {
+					fieldName: 'paymentTermDescription'
+				}
+			},
+			{
+				id: 'remark',
+				header: {
+					text: 'common_remark'
+				},
+				sortable: true,
+				isActive: true,
+				width: '183px',
+				minWidth: '183px',
+				maxWidth: '183px',
+				type: Go5TableStandardColumnType.Text,
+				topic: {
+					fieldName: 'remark'
+				}
+			},
+			{
+				id: 'refNo',
+				header: {
+					text: 'common_saleorder_ref_no_detail'
+				},
+				sortable: true,
+				isActive: true,
+				width: '160px',
+				minWidth: '160px',
+				maxWidth: '160px',
+				type: Go5TableStandardColumnType.Text,
+				topic: {
+					fieldName: 'refNo'
+				}
+			},
+			{
+				id: 'dealNo',
+				header: {
+					text: 'common_deal_no'
+				},
+				sortable: true,
+				isActive: true,
+				width: '160px',
+				minWidth: '160px',
+				maxWidth: '160px',
+				type: Go5TableStandardColumnType.Text,
+				topic: {
+					fieldName: 'dealNo'
+				}
+			},
+			{
+				id: 'orderNo',
+				header: {
+					text: 'common_quotation_quotation_no'
+				},
+				sortable: true,
+				isActive: true,
+				width: '160px',
+				minWidth: '160px',
+				maxWidth: '160px',
+				type: Go5TableStandardColumnType.Text,
+				topic: {
+					fieldName: 'orderNo'
+				}
+			},
+			{
+				id: 'attachmentCount',
+				header: {
+					text: 'common_total_attachment'
+				},
+				sortable: true,
+				isActive: true,
+				width: '180px',
+				minWidth: '180px',
+				maxWidth: '180px',
+				type: Go5TableStandardColumnType.Text,
+				topic: {
+					fieldName: 'attachmentCount'
+				}
+			},
+			{
+				id: 'privateNote',
+				header: {
+					text: 'common_activity_private_note'
+				},
+				sortable: true,
+				isActive: true,
+				width: '180px',
+				minWidth: '180px',
+				maxWidth: '180px',
+				type: Go5TableStandardColumnType.Text,
+				topic: {
+					fieldName: 'privateNote'
+				}
+			},
+			{
+                id : 'fullName',
+                type: Go5TableStandardColumnType.Staff,
+                header: {
+                    text: 'common_report_staff',
+                },
+                staff: {
+                    fieldName: 'fullName',
+                },
+                image : {
+                    fieldName: 'pictureUrl',
+ 
+                    onClick: (item) =>
+                        {
+                            event?.stopPropagation();
+                            this.app.openEmployeeDetailDialog(item.createdByUserId);
+                        }
+                },
+                width : '202px',
+                minWidth: '202px',
+                sortable: true,
+				isActive: true,
+            },
+            {
+                id : 'status',
+                type: Go5TableStandardColumnType.Status,
+                header: {
+                    text: 'common_report_tb_statusname',
+                    align: 'center'
+                },
+                status: {
+                    fieldName: 'status',
+                    type: STATUS_NAME.SalesOrder
+                },
+                width : '170px',
+                sortable: true,
+				isActive: true,
+            }
+		]
+		this.columns = this.columns.map((col, idx) => ({
+            ...col,
+            isActive: true,
+            columnId: idx + 1
+        })) as any[];
+        this.filter.column = this.columns.map(col => col['columnId']);
+           
+        this.setActiveColumns(this.filter.column);
+ 
+        this.dataSourceFilter[0].dataSource = this.columns.map(col => ({
+            columnName: col.header.text,
+            columnId: col['columnId'],
+        }))
+ 
+        this._cdr.detectChanges()
+	}
 	public summary: Summary_Sales_Order = null
 	public loadingSummary = false
 	public pageLength = 20
@@ -430,14 +565,13 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 		dateFrom: new Date(this.date.getFullYear(), this.date.getMonth(), 1),
 		dateTo: new Date(this.date.getFullYear(), this.date.getMonth() + 1, 0)
 	}
-
 	public dataSourceFilter: FilterDataSource[] = [
 		{
 			text: 'common_report_filter_column',
 			value: 'column',
 			allowFiltering: false,
 			fields: this.columnsFields,
-			dataSource: this.columns
+			dataSource: []
 		},
 		{
 			text: 'common_status',
@@ -473,7 +607,7 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 			allowFiltering: true,
 			dataSource: []
 		}
-	]
+]
 
 	private readonly phraseService = inject(PhraseService)
 
@@ -508,7 +642,7 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 			this.getDataSummary()
 			this.getData()
 		})
-		this.currentDateFilter$ = this.dataShare.currentSearchReportFilter.subscribe(() => {
+		this.currentDateFilter$ = this.dataShare.currentSearchReportFilter.subscribe((s) => {
 			// this.filter.dateFrom = getDate(s.dateFrom)
 			// this.filter.dateTo = getDate(s.dateTo)
 			this.filterSharingService.setFilterSoReport(this.filter)
@@ -567,7 +701,7 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 
 	public loadSetting() {
 		this.currentDateFilter$ = this.dataShare.currentSearchReportFilter.subscribe({
-			next: () => {
+			next: (s) => {
 				// this.filter.dateFrom = getDate(s.dateFrom)
 				// this.filter.dateTo = getDate(s.dateTo)
 				this.filter.orderBy = 'dateCreated desc'
@@ -622,6 +756,7 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 				this.loading = false
 				this.scrollLoading.set(false)
 				this._cdr.detectChanges()
+				AppConfig.OPEN_FN.next({ key: 'dialog', value: { httpStatusCode: res?.httpStatusCode } })
 			},
 			(err) => {
 				this.data = []
@@ -643,7 +778,7 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 		]
 		let columnsExport = []
 		this.columns.forEach((c) => {
-			columnsExport = columnsExport.concat(c.column === 'saleOrderDetails' && c.isActive ? columns : c)
+			columnsExport = columnsExport.concat(c.id === 'saleOrderDetails' ? columns : c)
 		})
 		let objectExport = null
 		this.reportPDFService.exportReport(columnsExport).then((val) => {
@@ -712,25 +847,22 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 		}
 	}
 
-	public sortingBy(event, col: ColumnModel) {
-		if (col.orderable) {
-			this.columns?.forEach((column) => {
-				if (column.column === col.column) {
-					column['sortType'] = event.orderBy || 'ASC'
-				} else {
-					column['sortType'] = null
-				}
-				return column
-			})
+	public sortingBy(event: IGo5TableStandardSortEvent){
+        this.columns?.forEach((column) => {
+            if(column.id === event.id){
+                column['sortType'] = event.sortOrder || 'asc'
+            }else{
+                column['sortType'] = null
+            }
+        })
+ 
+        this.filter.orderBy = `${event.id} ${event.sortOrder?.toLowerCase() || 'asc'}`
+        this.reloadData()
+    }
 
-			this.filter.orderBy = event.key + ' ' + (event.orderBy || 'ASC')
-			this.reloadData()
-		}
-	}
-
-	public onSelectedColumn(value: number[]) {
-		this.columns.forEach((s) => (s.isActive = value.findIndex((a) => a === s.columnId) > -1))
-	}
+	public onSelectedColumn(value: string[]) {
+        this.columns.forEach((s) => (s.isActive = value.includes(s['columnId'])));
+    }
 
 	public onSelectedTeams(e) {
 		this.filter.teamIds = e?.length > 0 ? e : null
@@ -742,7 +874,7 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 
 	getRowSpan(data: any[]) {
 		const detail = this.columns.find((s) => s['columnId'] === 4)
-		if (detail.isActive) {
+		if (detail) {
 			return data?.length || 1
 		}
 		return 1
@@ -759,13 +891,14 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 		this.summaryObserver$?.unsubscribe()
 		this.summaryObserver$ = this.reportService.SummarySalesOrderReport(this.filter).subscribe(
 			(res) => {
-				this.summary = Object.assign(new Summary_Sales_Order(), res)
+				this.summary = res
 				this.loadingSummary = false
 				this.summaryObserver$?.unsubscribe()
 				this.summaryObserver$?.remove(this.summaryObserver$)
 				this.summaryObserver$ = null
 			},
 			(error) => {
+				console.log(error)
 				this.loadingSummary = false
 				AppConfig.OPEN_FN.next({ key: 'dialog', value: { httpStatusCode: error?.status } })
 			}
@@ -804,6 +937,7 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 				this.staff$ = null
 			},
 			(err) => {
+				console.log(err)
 				this.setDataSourceFilter('userIds', [])
 				AppConfig.OPEN_FN.next({ key: 'dialog', value: { httpStatusCode: err?.status } })
 			}
@@ -895,32 +1029,30 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 	}
 
 	public setDefaultColumn() {
-		if (this.firstSettingColumn) {
-			this.columns = this.columns?.map((col, index) => {
-				col.columnId = index + 1
-				return col
-			})
-
-			const columnIds = this.columns?.filter((c) => c?.isActive)?.map((col) => col?.columnId)
-			this.defaultColumns = columnIds
-			this.filter.column = this.defaultColumns
-
-			this.setDataSourceFilter('column', this.columns)
-		}
-
-		if (this.filter?.column?.length) {
-			this.setActiveColumns(this.filter?.column)
-		}
-
-		this.firstSettingColumn = false
-	}
-
-	setActiveColumns(columnsIds = []) {
-		this.columns = this.columns?.map((col) => {
-			col.isActive = columnsIds.includes(col.columnId)
-			return col
-		})
-	}
+        if (this.firstSettingColumn) {
+            this.columns = this.columns?.map((col, index) => {
+                col['columnId'] = index + 1
+                return col
+            })
+            const columnIds = this.columns?.filter((c) => c?.isActive)?.map((col) => col['columnId'])
+            this.defaultColumns = columnIds
+            this.filter.column = columnIds
+            this.setDataSourceFilter('column', this.columns)
+        }
+ 
+        if (this.filter?.column?.length) {
+            this.setActiveColumns(this.filter?.column)
+        }
+ 
+        this.firstSettingColumn = false
+    }
+ 
+	public setActiveColumns(columnIds = []) {
+        this.columns = this.columns?.map((col) => {
+            col.isActive = columnIds.includes(col['columnId'])
+            return col
+        })
+    }
 
 	private setDataSourceFilter(key: string, data: any[]) {
 		const filter = this.dataSourceFilter.find((f) => f.value === key)
@@ -930,7 +1062,7 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 		this.dataSourceFilter = [...this.dataSourceFilter]
 	}
 
-	public onClearAll(_event) {
+	public onClearAll(event) {
 		this.columns = this.columns?.map((col) => {
 			col.isActive = false
 			return col
@@ -967,7 +1099,7 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 			const text = item[field]
 			if (!text) return false
 
-			const column = this.columns.find((col) => col.column === field)
+			const column = this.columns.find((col) => col.id === field)
 			if (!column) return false
 
 			const columnWidth = parseInt(column.width)
@@ -994,6 +1126,7 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 					}
 				})
 				.catch((error) => {
+					console.log(error)
 					this.customers = []
 
 					if ($event.updateData) {
@@ -1023,7 +1156,7 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 	}
 
 	public translateKeyInText(text: string) {
-		if (typeof text !== 'string') {
+		if(typeof text !== 'string'){
 			return text
 		}
 
@@ -1032,15 +1165,12 @@ export class SalesOrderReportComponent implements OnInit, OnDestroy {
 		if (match) {
 			match.forEach((key) => {
 				var translated = this.phraseService.translate(key)
-				if (translated) {
+				if(translated){
 					text = text.replace(`{${key}}`, translated)
 				}
 			})
 		}
-
+	
 		return text
 	}
-	isTHLang = computed(() => {
-		return this.appConfigService.getLanguage() === LANGUAGE_KEY.TH
-	})
 }
